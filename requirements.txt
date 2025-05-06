@@ -1,8 +1,5 @@
-
 streamlit
-pymupdf
-python-docx
-docx2txt
-nltk
+fitz
+PyMuPDF
 pandas
-openpyxl
+nltk

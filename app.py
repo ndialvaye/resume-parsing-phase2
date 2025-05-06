@@ -1,23 +1,25 @@
 import streamlit as st
-from utils import extract_text_from_pdf, clean_text
+from utils import extract_text_from_pdf, clean_text, save_to_excel
 import os
-import pandas as pd
+import tempfile
 
-st.set_page_config(page_title="Phase 2 - Nettoyage des CVs", layout="wide")
-st.title("🧹 Phase 2 - Extraction et Nettoyage Automatisé de CVs")
+st.set_page_config(page_title="Resume Parsing - Phase 2", layout="centered")
+st.title("📄 Resume Cleaner (Phase 2 - GOMYCODE)")
 
-uploaded_files = st.file_uploader("Chargez un ou plusieurs fichiers PDF", type="pdf", accept_multiple_files=True)
+uploaded_files = st.file_uploader("Upload CVs (PDF uniquement)", type=["pdf"], accept_multiple_files=True)
 
 if uploaded_files:
-    data = []
-    for file in uploaded_files:
-        text = extract_text_from_pdf(file)
-        cleaned = clean_text(text)
-        data.append({"Nom du fichier": file.name, "Texte nettoyé": cleaned})
+    all_results = []
+    for uploaded_file in uploaded_files:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(uploaded_file.read())
+            tmp_path = tmp.name
 
-    df = pd.DataFrame(data)
-    output_file = "phase2_clean_nltk/cv_cleaned.xlsx"
-    os.makedirs("phase2_clean_nltk", exist_ok=True)
-    df.to_excel(output_file, index=False)
-    st.success("Fichier généré avec succès !")
-    st.download_button("📥 Télécharger le fichier Excel", data=open(output_file, "rb"), file_name="cv_cleaned.xlsx")
+        raw_text = extract_text_from_pdf(tmp_path)
+        cleaned_text = clean_text(raw_text)
+
+        all_results.append({"Nom du fichier": uploaded_file.name, "Texte Nettoyé": cleaned_text})
+
+    save_to_excel(all_results)
+    st.success("✅ Données nettoyées et sauvegardées dans 'result_cleaned_phase2.xlsx'")
+    st.download_button("📥 Télécharger le fichier Excel", "result_cleaned_phase2.xlsx")
