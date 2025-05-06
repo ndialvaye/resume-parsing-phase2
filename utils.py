@@ -1,29 +1,33 @@
-import fitz  # PyMuPDF
+import io
 import re
-import nltk
+import os
 import pandas as pd
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from PyPDF2 import PdfReader
 
-# Assure le téléchargement dans Streamlit Cloud
 nltk.download("punkt")
 nltk.download("wordnet")
 
-def extract_text_from_pdf(file_path):
-    doc = fitz.open(file_path)
+def extract_text_from_pdf(uploaded_file):
+    reader = PdfReader(uploaded_file)
     text = ""
-    for page in doc:
-        text += page.get_text()
+    for page in reader.pages:
+        text += page.extract_text() or ""
     return text
 
 def clean_text(text):
-    text = re.sub(r"\s+", " ", text)
-    text = re.sub(r"[^\w\s]", "", text)
-    tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
-    lemmatized = [lemmatizer.lemmatize(t.lower()) for t in tokens]
-    return " ".join(lemmatized)
+    text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+    tokens = word_tokenize(text.lower())
+    tokens = [lemmatizer.lemmatize(token) for token in tokens]
+    return " ".join(tokens)
 
-def save_to_excel(data):
-    df = pd.DataFrame(data)
-    df.to_excel("result_cleaned_phase2.xlsx", index=False)
+def save_to_excel(filename, cleaned_text):
+    df = pd.DataFrame([{"filename": filename, "cleaned_text": cleaned_text}])
+    output_path = "cleaned_data.xlsx"
+    if os.path.exists(output_path):
+        df_existing = pd.read_excel(output_path)
+        df = pd.concat([df_existing, df], ignore_index=True)
+    df.to_excel(output_path, index=False)
