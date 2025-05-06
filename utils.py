@@ -1,31 +1,27 @@
-
+import fitz  # PyMuPDF
 import re
-import fitz
-import docx2txt
-import nltk
-from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-nltk.download("punkt")
-nltk.download("stopwords")
-nltk.download("wordnet")
-
-def extract_text_from_pdf(pdf_path):
+def extract_text_from_pdf(uploaded_file):
     text = ""
-    doc = fitz.open(pdf_path)
-    for page in doc:
-        text += page.get_text()
+    with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
+        for page in doc:
+            text += page.get_text()
     return text
 
-def extract_text_from_docx(docx_path):
-    return docx2txt.process(docx_path)
-
 def clean_text(text):
-    text = text.lower()
-    text = re.sub(r"[^a-zA-ZÀ-ÿ0-9\s]", "", text)
+    # Nettoyage de base
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"[^a-zA-Z0-9.,;:\-\s]", "", text)
+
+    # Tokenisation
     tokens = word_tokenize(text)
-    tokens = [t for t in tokens if t not in stopwords.words("french")]
+
+    # Stopwords et lemmatisation
+    stop_words = set(stopwords.words("english"))
     lemmatizer = WordNetLemmatizer()
-    tokens = [lemmatizer.lemmatize(t) for t in tokens]
+    tokens = [lemmatizer.lemmatize(word.lower()) for word in tokens if word.lower() not in stop_words]
+
     return " ".join(tokens)
