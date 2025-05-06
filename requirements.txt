@@ -3,3 +3,6 @@ fitz
 PyMuPDF
 pandas
 nltk
+PyPDF2
+openpyxl
+
