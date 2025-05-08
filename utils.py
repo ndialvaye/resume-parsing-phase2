@@ -1,13 +1,10 @@
-import io
 import re
 import os
 import pandas as pd
 import nltk
-from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from PyPDF2 import PdfReader
 
-nltk.download("punkt")
 nltk.download("wordnet")
 
 def extract_text_from_pdf(uploaded_file):
@@ -20,12 +17,12 @@ def extract_text_from_pdf(uploaded_file):
 def clean_text(text):
     lemmatizer = WordNetLemmatizer()
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
-    tokens = word_tokenize(text.lower())
+    tokens = text.lower().split()
     tokens = [lemmatizer.lemmatize(token) for token in tokens]
     return " ".join(tokens)
 
 def save_to_excel(filename, cleaned_text):
-    df = pd.DataFrame([{"filename": filename, "cleaned_text": cleaned_text}])
+    df = pd.DataFrame([{"Fichier": filename, "Texte_Nettoyé": cleaned_text}])
     output_path = "cleaned_data.xlsx"
     if os.path.exists(output_path):
         df_existing = pd.read_excel(output_path)
